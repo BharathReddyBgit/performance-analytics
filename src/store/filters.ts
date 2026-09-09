@@ -50,22 +50,26 @@ export interface ActiveFilterChip {
 }
 
 /**
- * Stable FilterState selector: shallow-compared and excludes `search`, so
- * debounced typing never re-triggers chart/KPI queries that don't use it.
+ * Subscribe to just the analytics filter slice with a stable identity.
+ *
+ * `useShallow` is a React hook (it memoizes with useRef internally), so it
+ * must be called during render — not at module scope. This is the documented
+ * zustand v5 pattern: `useStore(useShallow(selector))`. The output object is
+ * shallow-stable, so components down the line (and the TanStack Query keys
+ * derived from it) keep stable references across unrelated store updates.
  */
-const selectAnalyticsFilters = useShallow((s: FilterStore): FilterState => ({
-  preset: s.preset,
-  startDay: s.startDay,
-  endDay: s.endDay,
-  platforms: s.platforms,
-  countries: s.countries,
-  devices: s.devices,
-  campaigns: s.campaigns,
-  minSpend: s.minSpend,
-  minRevenue: s.minRevenue,
-}));
-
-/** Subscribe to just the analytics filter slice with a stable identity. */
 export function useAnalyticsFilters(): FilterState {
-  return useFilterStore(selectAnalyticsFilters);
+  return useFilterStore(
+    useShallow((s: FilterStore): FilterState => ({
+      preset: s.preset,
+      startDay: s.startDay,
+      endDay: s.endDay,
+      platforms: s.platforms,
+      countries: s.countries,
+      devices: s.devices,
+      campaigns: s.campaigns,
+      minSpend: s.minSpend,
+      minRevenue: s.minRevenue,
+    })),
+  );
 }
