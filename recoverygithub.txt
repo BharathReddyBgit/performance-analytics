@@ -1,0 +1,97 @@
+════════════════════════════════════════════════════════════════════════
+ RECOVERY FILE — ITEMS EXCLUDED FROM THE REPO
+ Project: Performance-Critical Data Visualization Dashboard (Pulse Analytics)
+ Created: 2026-09-09
+════════════════════════════════════════════════════════════════════════
+
+This file IS published to the repo. It documents everything that is
+EXCLUDED from the GitHub push (by .gitignore) and exactly how to
+restore each item after cloning. It contains NO secret values —
+only empty templates to fill in locally.
+
+────────────────────────────────────────────────────────────────────────
+ 1. .env.local  —  SECRETS (must be recreated manually)
+────────────────────────────────────────────────────────────────────────
+Status: NOT pushed (correct — contains secrets). Values are NOT written
+here for security. Recreate it after pulling:
+
+  Step 1: In the project root on your PC, create a file named .env.local
+  Step 2: Paste this template and fill the values:
+
+    # Convex deployment URL - replace with your actual deployment URL
+    # Run 'bun convex dev' once to get the development URL
+    VITE_CONVEX_URL=
+
+    # Convex site URL for auth (your local/dev app URL)
+    CONVEX_SITE_URL=http://localhost:5173
+
+    # Deployment used by `bun convex dev`
+    CONVEX_DEPLOYMENT=
+
+  Where to get the values:
+  - VITE_CONVEX_URL / CONVEX_DEPLOYMENT:
+      run:  bun convex dev --once
+      (it prints/uses your deployment; or check the Convex dashboard)
+  - Or copy them from the Freebuff project Keys/API keys tab, or from
+    the original .env.local in this environment before downloading.
+
+  Reference: .env.example (which IS published) holds the same key names
+  with empty values.
+
+────────────────────────────────────────────────────────────────────────
+ 2. src/convex/_generated/  —  auto-generated, DO NOT recover manually
+────────────────────────────────────────────────────────────────────────
+Excluded files: api.d.ts, api.js, dataModel.d.ts, server.d.ts, server.js
+
+These are Convex codegen output. NEVER hand-write them. After pulling,
+regenerate with one command from the project root:
+
+    bun convex dev --once
+
+(or: npx convex dev --once). Requires .env.local from section 1 to exist
+first. This also refreshes TypeScript types used across the app.
+
+────────────────────────────────────────────────────────────────────────
+ 3. node_modules/  —  dependencies, restored by install
+────────────────────────────────────────────────────────────────────────
+Restore after pulling:
+
+    bun install        # preferred (bun.lock is committed)
+    # or: npm install  # package-lock.json is also committed
+
+────────────────────────────────────────────────────────────────────────
+ 4. dist/  —  build output, recreated by build
+────────────────────────────────────────────────────────────────────────
+Never committed. Recreate any time with:
+
+    bun run build      # tsc -b && vite build
+    bun preview        # serve the built dist/ locally
+
+────────────────────────────────────────────────────────────────────────
+ 5. recoverygithub.txt  —  this file itself
+────────────────────────────────────────────────────────────────────────
+This file IS committed to the repo (not gitignored). It holds no
+secrets — only restore instructions. If you later fill it with real
+values, add 'recoverygithub.txt' to .gitignore first.
+
+────────────────────────────────────────────────────────────────────────
+ QUICK START AFTER CLONING (order matters)
+────────────────────────────────────────────────────────────────────────
+  1. bun install
+  2. Create .env.local  (section 1 above)
+  3. bun convex dev --once        # regenerates src/convex/_generated
+  4. bun dev                      # start the dev server
+  5. Optional checks:
+       bun run smoke              # engine invariant test
+       bun tsc -b --noEmit        # typecheck
+
+────────────────────────────────────────────────────────────────────────
+ SECURITY NOTES
+────────────────────────────────────────────────────────────────────────
+- .env.local, node_modules, dist, src/convex/_generated are gitignored —
+  verify before pushing:  git status   (none of these should appear)
+- src/convex/auth/emailOtp.ts ships with a platform-managed OTP endpoint
+  key from the Freebuff template. It only functions against Freebuff's
+  email service. If you migrate auth away from the template, rotate it.
+- Never hardcode production URLs or keys in src/ — always import.meta.env.
+════════════════════════════════════════════════════════════════════════
