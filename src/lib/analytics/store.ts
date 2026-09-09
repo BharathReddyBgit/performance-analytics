@@ -34,6 +34,7 @@ function sortByDay(cols: DatasetColumns, rowCount: number, startDay: number, day
   for (let d = 0; d < daySpan; d++) offsets[d + 1] = offsets[d] + counts[d];
 
   const out = {
+    day: new Int32Array(rowCount),
     campaign: new Uint16Array(rowCount),
     country: new Uint8Array(rowCount),
     device: new Uint8Array(rowCount),
@@ -47,6 +48,7 @@ function sortByDay(cols: DatasetColumns, rowCount: number, startDay: number, day
   const day = cols.day;
   for (let i = 0; i < rowCount; i++) {
     const pos = cursor[day[i] - startDay]++;
+    out.day[pos] = day[i];
     out.campaign[pos] = cols.campaign[i];
     out.country[pos] = cols.country[i];
     out.device[pos] = cols.device[i];
@@ -56,6 +58,7 @@ function sortByDay(cols: DatasetColumns, rowCount: number, startDay: number, day
     out.spend[pos] = cols.spend[i];
     out.revenue[pos] = cols.revenue[i];
   }
+  cols.day = out.day;
   cols.campaign = out.campaign;
   cols.country = out.country;
   cols.device = out.device;

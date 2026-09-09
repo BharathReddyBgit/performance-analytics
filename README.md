@@ -29,7 +29,7 @@ It is a frontend R&D project: every architectural decision — a Web Worker data
 | `/dashboard/campaigns` | Campaign Analytics | Aggregated campaign cards, campaign drill-down |
 | `/dashboard/campaigns/:id` | Campaign Details | Per-campaign KPIs + daily revenue/spend/conversions trend |
 | `/dashboard/monitor` | **Performance Monitor** | Live measured latencies (p50/p95), heap, dataset stats, cache counters |
-| `/dashboard/settings | Settings | Rebuild dataset (10k–200k rows), theme toggle |
+| `/dashboard/settings` | Settings | Rebuild dataset (10k–200k rows), theme toggle |
 
 ---
 
@@ -282,6 +282,16 @@ The Performance Monitor page (`/dashboard/monitor`) records **only measured valu
 | DOM size | DevTools console | `document.querySelectorAll('tr').length` while scrolling — stays ~30 |
 
 No benchmark numbers are claimed in this README: run the procedure above on your hardware and record what you observe. The monitor's status band (Excellent / Good / Needs optimization) is derived from the measured p95s with the thresholds documented in `src/hooks/use-performance.ts`.
+
+### Engine invariant smoke test
+
+A headless check of the query engine's core invariants runs without a browser:
+
+```bash
+bun run smoke   # generates 60k rows and validates the engine invariants
+```
+
+It verifies: date-window filtering (row window ⊆ [startDay, endDay]), metric consistency (`ctr = clicks/impressions`, `roas = revenue/spend`), descending sort order, pagination stability across pages, search by name and campaign ID (including zero-result handling), timeseries/breakdown totals reconciling with KPI sums, CSV chunk coverage, and filter-cache hits on repeated queries.
 
 ---
 

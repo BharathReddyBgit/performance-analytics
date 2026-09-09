@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "smoke": "bun scripts/smoke-engine.ts"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.90",
