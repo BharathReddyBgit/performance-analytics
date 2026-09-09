@@ -75,6 +75,103 @@ secrets — only restore instructions. If you later fill it with real
 values, add 'recoverygithub.txt' to .gitignore first.
 
 ────────────────────────────────────────────────────────────────────────
+ RUN ON YOUR COMPUTER — COMPLETE COMMAND WALKTHROUGH
+────────────────────────────────────────────────────────────────────────
+
+ PREREQUISITES (install once, in this order)
+─────────────────────────────
+  1. Node.js 20+  — https://nodejs.org  (verify:  node --version )
+  2. Bun          — install:  powershell -c "irm bun.sh/install.ps1 | iex"   (Windows)
+                             or:  curl -fsSL https://bun.sh/install | bash       (macOS/Linux)
+                  verify:  bun --version
+  3. Git          — https://git-scm.com  (verify:  git --version )
+
+ GET THE CODE
+─────────────────────────────
+  git clone https://github.com/YOUR_USERNAME/pulse-analytics.git
+  cd pulse-analytics
+
+  (Already downloaded as a zip? Unzip it, then 'cd' into the folder.
+   Zip downloads have no .git — run 'git init -b main' once if you
+   want to push your changes back later.)
+
+ SETUP — RUN THESE IN ORDER, FROM THE PROJECT ROOT
+─────────────────────────────
+  1.  bun install
+        → installs every dependency (uses the committed bun.lock)
+        → npm install also works if you prefer npm
+
+  2.  Create .env.local in the project root (see section 1 above)
+        Windows (PowerShell):
+          Copy-Item .env.example .env.local
+        macOS / Linux:
+          cp .env.example .env.local
+        Then open .env.local and fill in the values.
+
+  3.  bun convex dev --once
+        → one-shot: pushes Convex functions and generates
+          src/convex/_generated (typescript types for the backend)
+        → needs the CONVEX_* values from step 2; if you have no Convex
+          account/deployment yet it will prompt you to create/login —
+          the free dev deployment is enough
+        → verify: the folder src/convex/_generated now exists
+
+  4.  bun dev
+        → starts the dev server at http://localhost:5173
+        → first load: click 'Launch dashboard' → sign in (email OTP
+          or 'Continue as guest') → the 60k-row dataset generates
+          in the browser (a few seconds, shown on the Performance
+          Monitor page)
+
+  5.  (Optional) second terminal — Convex live sync while developing:
+        bun convex dev
+        (keep it running; it redeploys functions as you edit src/convex/)
+
+ VERIFY EVERYTHING WORKS
+─────────────────────────────
+  bun tsc -b --noEmit      → typecheck, should print nothing and exit 0
+  bun run smoke            → engine invariant test, ends with
+                             'ALL INVARIANTS PASS'
+  bun lint                 → eslint over the project
+
+ PRODUCTION BUILD & PREVIEW
+─────────────────────────────
+  bun run build            → typecheck + production bundle into dist/
+  bun preview              → serves dist/ at http://localhost:4173
+
+ DAILY USE — COMMAND CHEAT SHEET
+─────────────────────────────
+  bun dev                  → run the app (Ctrl+C to stop)
+  bun convex dev           → sync backend changes while developing
+  bun tsc -b --noEmit      → quick typecheck after edits
+  bun run smoke            → quick engine sanity check
+  bun run build            → production build
+
+ TROUBLESHOOTING
+─────────────────────────────
+  'bun: command not found'     → reinstall Bun (see prerequisites),
+                                  then reopen the terminal
+  Blank page / 'Did you forget to run convex dev?' in console
+      → step 3 was skipped or failed: rerun  bun convex dev --once
+      → also confirm VITE_CONVEX_URL in .env.local matches your
+        deployment (it ends in .convex.cloud)
+  Auth never confirms / loops back to /auth
+      → CONVEX_SITE_URL must be http://localhost:5173 for local runs
+  Type errors mentioning _generated
+      → stale codegen: rerun  bun convex dev --once
+  Node version error
+      → upgrade to Node 20+ (bun requires it)
+  Port 5173 already in use
+      → close the other dev server, or run:  bun dev -- --port 5174
+
+ DEPLOY THE FRONTEND (OPTIONAL)
+─────────────────────────────
+  Push the repo → import it on Vercel or Netlify → set the env var
+  VITE_CONVEX_URL in the host's dashboard → build command:
+  'bun run build' (Vercel detects Vite automatically). See README
+  → Deployment for details.
+
+────────────────────────────────────────────────────────────────────────
  QUICK START AFTER CLONING (order matters)
 ────────────────────────────────────────────────────────────────────────
   1. bun install
