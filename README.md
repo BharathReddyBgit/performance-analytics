@@ -1,272 +1,311 @@
+# Performance-Critical Data Visualization Dashboard
+
+**Pulse Analytics** — a production-quality ad-performance analytics dashboard engineered around one constraint: **the browser must stay at 60fps while exploring hundreds of thousands of records.**
+
+It is a frontend R&D project: every architectural decision — a Web Worker data engine, a columnar in-memory store, a virtualized table, and a live performance monitor — exists to demonstrate scalable data handling in React.
+
+---
+
 ## Overview
 
-This project uses the following tech stack:
-- Vite
-- Typescript
-- React Router v7 (all imports from `react-router` instead of `react-router-dom`)
-- React 19 (for frontend components)
-- Tailwind v4 (for styling)
-- Shadcn UI (for UI components library)
-- Lucide Icons (for icons)
-- Convex (for backend & database)
-- Convex Auth (for authentication)
-- Framer Motion (for animations)
-- Three js (for 3d models)
-
-All relevant files live in the 'src' directory.
-
-Use bun for the package manager.
-
-## Setup
-
-This project is set up already and running on a cloud environment, as well as a convex development in the sandbox.
-
-## Environment Variables
-
-The project is set up with project specific CONVEX_DEPLOYMENT and VITE_CONVEX_URL environment variables on the client side.
-
-The convex server has a separate set of environment variables that are accessible by the convex backend.
-
-Currently, these variables include auth-specific keys: JWKS, JWT_PRIVATE_KEY, and SITE_URL.
-
-
-# Using Authentication (Important!)
-
-You must follow these conventions when using authentication.
-
-## Auth is already set up.
-
-All convex authentication functions are already set up. The auth currently uses email OTP and anonymous users, but can support more.
-
-The email OTP configuration is defined in `src/convex/auth/emailOtp.ts`. DO NOT MODIFY THIS FILE.
-
-Also, DO NOT MODIFY THESE AUTH FILES: `src/convex/auth.config.ts` and `src/convex/auth.ts`.
-
-## Using Convex Auth on the backend
-
-On the `src/convex/users.ts` file, you can use the `getCurrentUser` function to get the current user's data.
-
-## Using Convex Auth on the frontend
-
-The `/auth` page is already set up to use auth. Navigate to `/auth` for all log in / sign up sequences.
-
-You MUST use this hook to get user data. Never do this yourself without the hook:
-```typescript
-import { useAuth } from "@/hooks/use-auth";
-
-const { isLoading, isAuthenticated, user, signIn, signOut } = useAuth();
-```
-
-## Protected Routes
-
-The starter `/dashboard` route is protected with `RequireAuth`, which sends
-signed-out users to `/auth?returnTo=<current route>`. Extend that page for the
-product's authenticated experience, and reuse `RequireAuth` when adding another
-protected route.
-
-## Auth Page
-
-The auth page is defined in `src/pages/Auth.tsx`. Send sign-in and sign-up actions
-to `/auth`.
-
-## Authorization
-
-You can perform authorization checks on the frontend and backend.
-
-On the frontend, you can use the `useAuth` hook to get the current user's data and authentication state.
-
-You should also be protecting queries, mutations, and actions at the base level, checking for authorization securely.
-
-## Adding a redirect after auth
-
-The `/auth` route in `src/main.tsx` redirects to `/dashboard` by default. If the
-product's main authenticated route is different, update `redirectAfterAuth` to
-that route. A validated same-origin `returnTo` query parameter takes priority so
-users can resume the protected page they originally requested. Never leave an
-authenticated product redirecting back to the public landing page.
-
-## Complete authenticated products
-
-When the requested product implies accounts, a workspace, a dashboard, or other
-signed-in functionality, the task is not complete with only a landing page and
-auth form. Build the main authenticated experience, protect its route, and verify
-that signing in reaches it.
-
-# Frontend Conventions
-
-You will be using the Vite frontend with React 19, Tailwind v4, and Shadcn UI.
-
-Generally, pages should be in the `src/pages` folder, and components should be in the `src/components` folder.
-
-Shadcn primitives are located in the `src/components/ui` folder and should be used by default.
-
-## Page routing
-
-Your page component should go under the `src/pages` folder.
-
-When adding a page, update the react router configuration in `src/main.tsx` to include the new route you just added.
-
-## Shad CN conventions
-
-Follow these conventions when using Shad CN components, which you should use by default.
-- Remember to use "cursor-pointer" to make the element clickable
-- For title text, use the "tracking-tight font-bold" class to make the text more readable
-- Always make apps MOBILE RESPONSIVE. This is important
-- AVOID NESTED CARDS. Try and not to nest cards, borders, components, etc. Nested cards add clutter and make the app look messy.
-- AVOID SHADOWS. Avoid adding any shadows to components. stick with a thin border without the shadow.
-- Avoid skeletons; instead, use the loader2 component to show a spinning loading state when loading data.
-
-
-## Landing Pages
-
-You must always create good-looking designer-level styles to your application. 
-- Make it well animated and fit a certain "theme", ie neo brutalist, retro, neumorphism, glass morphism, etc
-
-Use known images and emojis from online.
-
-If the user is logged in already, show the get started button to say "Dashboard" or "Profile" instead to take them there.
-
-## Responsiveness and formatting
-
-Make sure pages are wrapped in a container to prevent the width stretching out on wide screens. Always make sure they are centered aligned and not off-center.
-
-Always make sure that your designs are mobile responsive. Verify the formatting to ensure it has correct max and min widths as well as mobile responsiveness.
-
-- Always create sidebars for protected dashboard pages and navigate between pages
-- Always create navbars for landing pages
-- On these bars, the created logo should be clickable and redirect to the index page
-
-## Animating with Framer Motion
-
-You must add animations to components using Framer Motion. It is already installed and configured in the project.
-
-To use it, import the `motion` component from `framer-motion` and use it to wrap the component you want to animate.
-
-
-### Other Items to animate
-- Fade in and Fade Out
-- Slide in and Slide Out animations
-- Rendering animations
-- Button clicks and UI elements
-
-Animate for all components, including on landing page and app pages.
-
-## Three JS Graphics
-
-Your app comes with three js by default. You can use it to create 3D graphics for landing pages, games, etc.
-
-
-## Colors
-
-You can override colors in: `src/index.css`
-
-This uses the oklch color format for tailwind v4.
-
-Always use these color variable names.
-
-Make sure all ui components are set up to be mobile responsive and compatible with both light and dark mode.
-
-Set theme using `dark` or `light` variables at the parent className.
-
-## Styling and Theming
-
-When changing the theme, always change the underlying theme of the shad cn components app-wide under `src/components/ui` and the colors in the index.css file.
-
-Avoid hardcoding in colors unless necessary for a use case, and properly implement themes through the underlying shad cn ui components.
-
-When styling, ensure buttons and clickable items have pointer-click on them (don't by default).
-
-Always follow a set theme style and ensure it is tuned to the user's liking.
-
-## Toasts
-
-You should always use toasts to display results to the user, such as confirmations, results, errors, etc.
-
-Use the shad cn Sonner component as the toaster. For example:
+| | |
+|---|---|
+| **Frontend** | React 19 · TypeScript (strict) · Vite · Tailwind CSS v4 · shadcn/ui |
+| **State** | Zustand (filters/telemetry) · TanStack Query (async data layer) |
+| **Data engine** | Web Worker · columnar typed arrays (`Int32Array`, `Float64Array`, …) |
+| **Charts** | Recharts |
+| **Table** | TanStack Virtual |
+| **Auth** | Convex Auth (email OTP + guest sessions) |
+| **Theme** | Light/dark, Modern design system (quiet neutrals, refined blue accent) |
+
+### Pages
+
+| Route | Page | What it demonstrates |
+|---|---|---|
+| `/` | Landing | Product overview, entry into auth flow |
+| `/auth` | Auth | Email OTP + guest sign-in |
+| `/dashboard` | **Overview** | 8 KPI cards with period deltas, 6 interactive charts |
+| `/dashboard/explorer` | **Data Explorer** | Virtualized table over the full dataset: sort, search, filters, pagination, CSV export |
+| `/dashboard/campaigns` | Campaign Analytics | Aggregated campaign cards, campaign drill-down |
+| `/dashboard/campaigns/:id` | Campaign Details | Per-campaign KPIs + daily revenue/spend/conversions trend |
+| `/dashboard/monitor` | **Performance Monitor** | Live measured latencies (p50/p95), heap, dataset stats, cache counters |
+| `/dashboard/settings | Settings | Rebuild dataset (10k–200k rows), theme toggle |
+
+---
+
+## Problem Statement
+
+Typical dashboards fetch 50k+ rows as JSON, map them to JS objects, and render every table row into the DOM. Three things kill them:
+
+1. **Parse/allocate cost** — converting 50k JSON rows to objects freezes the main thread for hundreds of ms.
+2. **DOM explosion** — 50k `<tr>` nodes make every scroll a layout event.
+3. **Re-render storms** — one filter change re-runs aggregation across all components.
+
+Pulse Analytics eliminates all three by design.
+
+---
+
+## Architecture
 
 ```
-import { toast } from "sonner"
+User
+ ↓
+React 19 + TypeScript (pages, charts, virtualized table)
+ ↓
+TanStack Query  ←─ query keys embed the exact filter snapshot
+ ↓
+analytics client (promise-correlated postMessage, latency ring buffers)
+ ↓
+Web Worker — AnalyticsEngine
+ ├─ generateDataset()  deterministic seeded synthetic data
+ ├─ AnalyticsStore     columnar typed arrays + day-run index + filter cache
+ └─ query/sort/page    search → sort → paginate, CSV serialization
+ ↓
+Zustand (filter store, telemetry stores)
+```
 
-import { Button } from "@/components/ui/button"
-export function SonnerDemo() {
-  return (
-    <Button
-      variant="outline"
-      onClick={() =>
-        toast("Event has been created", {
-          description: "Sunday, December 03, 2023 at 9:00 AM",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
-        })
-      }
-    >
-      Show Toast
-    </Button>
-  )
+### Data flow
+
+1. On boot, the main thread sends `{ type: "init", rowCount }`.
+2. The worker generates the dataset **entirely inside the worker** and replies with compact metadata (row count, campaigns, byte footprint).
+3. Every view then sends a *query* — filters + search + sort + page — and receives **only the data it needs**:
+   - KPI cards → one aggregated `Kpi` object
+   - Charts → 8–545 aggregated points
+   - Table → one page of ≤250 row objects
+   - CSV → 5,000-row text chunks
+
+**No raw dataset ever crosses the worker boundary.** The main thread never holds more than what is on screen.
+
+### The columnar store
+
+Records are stored as parallel typed arrays, not objects:
+
+```
+day:          Int32Array    campaign:  Uint16Array
+country:      Uint8Array    device:    Uint8Array
+impressions:  Float64Array  clicks:    Uint32Array
+conversions:  Uint32Array   spend:     Float64Array
+revenue:      Float64Array
+```
+
+~40 bytes per record, cache-friendly, zero per-row object headers. At 200k rows that is ~8 MB versus ~80+ MB as JS objects — and the arrays are allocated once.
+
+Rows are reordered **day-ascending** with an O(n) counting sort after generation, so a date-window filter becomes a contiguous slice instead of a full scan. The store also keeps an **LRU filter cache** (keyed by the full filter state) so re-sorting, re-paging, or toggling between previously seen filter states skips the scan entirely.
+
+---
+
+## Performance Optimizations
+
+### 1. Why virtualization was used
+
+`@tanstack/react-virtual` renders only the ~20 rows inside the viewport (+8 overscan). For 200k filtered rows the DOM contains **~28 `<tr>` nodes**, regardless of dataset size. Scroll stays a compositor-driven transform instead of a layout event. Without it, the table alone would create 200k rows × 16 cells = 3.2M DOM nodes — impossible on any device.
+
+### 2. Why server-side-style pagination was used
+
+The engine's query API mirrors a server contract (`page`, `pageSize`, `sortBy`, `sortDir`, filters) and returns `{ data, pagination }`. Only one page of row *objects* is materialized per response — the sort runs on an index array, not on row objects, so `page 2` reuses the memoized sorted view with zero additional aggregation. The same protocol would work unchanged against a REST backend.
+
+### 3. How debouncing reduces API calls
+
+Search input is debounced (`useDebounce`, 250 ms) before it enters the filter store, so typing "linkedin" produces **one** engine query instead of eight. Keystrokes still update the input instantly because the raw value lives in local component state; only the settled value reaches the data layer.
+
+### 4. How memoization reduces unnecessary computation
+
+- `React.memo` on every chart, KPI card, and table row render path.
+- `useMemo` for chart data mapping and query objects (stable references → stable query keys).
+- Engine-level memoization: filter→index compilation and the sorted view are cached inside the worker; identical requests are answered in microseconds.
+- Zustand selectors with `useShallow` so unrelated filter fields don't re-render subscribed components.
+
+### 5. How React Query caching works
+
+Every query key embeds the exact filter snapshot:
+
+```
+["analytics", "table", { startDay, endDay, platforms, …, search, sortBy, page }]
+```
+
+- Identical filter state → cache hit, zero engine work.
+- `staleTime: 5 min` — aggregates are immutable per filter snapshot in this workload.
+- `placeholderData: prev` keeps the previous chart on screen while new filters compute, so the UI never flashes empty.
+- "Refresh" is an explicit `invalidateQueries`, matching how a real server-backed cache would work.
+
+### 6. How code splitting improves initial load
+
+Every route is a `lazy()` chunk. Recharts, framer-motion, and radix primitives live in separate vendor chunks (`vite.config.ts` `manualChunks`), so the entry bundle stays small; the chart library only downloads when a chart page loads.
+
+### 7. How large datasets are handled
+
+- **Worker isolation** — generation, filtering, sorting, aggregation, and CSV serialization never block the main thread.
+- **Columnar layout** — 40 B/row, SIMD-friendly tight loops.
+- **Day-run index** — date filters slice instead of scanning.
+- **LRU filter cache** — repeated interactions are O(1).
+- **Search on campaign table** — matching campaigns are precomputed per query, then rows are tested with an O(1) flag lookup.
+- **Chunked CSV export** — 5k rows per worker message with `setTimeout(0)` yields between chunks; the UI paints throughout a 200k-row export.
+
+### 8. How unnecessary re-renders are avoided
+
+- Global filter state lives **outside React** (Zustand) with narrow per-field selectors.
+- Query results are structurally shared by TanStack Query; memoized children don't re-render when identical data re-arrives.
+- The table's `useEffect` writes telemetry to an imperative store (not React state), so the Performance Monitor can poll without triggering render cascades.
+- Route-level and chart-level error boundaries isolate failures.
+
+---
+
+## Dataset
+
+Deterministic, seeded synthetic data (`mulberry32` PRNG) — same seed, same data, every session:
+
+- **42 campaigns** across 5 platforms (Google Ads, Meta Ads, LinkedIn Ads, YouTube, TikTok), zipf-weighted so a few campaigns dominate revenue
+- **545 days** of history ending yesterday
+- Realistic platform economics: LinkedIn CPC ≈ 5× TikTok CPC, video CTRs lower than search
+- Weekly seasonality (weekend dip), per-campaign country/device biases, Gaussian noise on CPC/CVR/ROAS
+
+Size is configurable in **Settings → Dataset** (10k – 200k rows). The default is 60k. Generation is timed and reported on the Performance Monitor.
+
+---
+
+## API Documentation
+
+The client-side engine intentionally mirrors a REST contract, so swapping in a real backend is a data-layer change only.
+
+### Worker protocol (current implementation)
+
+| Request | Payload | Response |
+|---|---|---|
+| `init` | `rowCount` | `ready` + dataset meta |
+| `query` | filters, `search`, `sortBy`, `sortDir`, `page`, `pageSize` | `{ rows, pagination }` |
+| `summary` | filters | `{ kpi, deltaPct }` (incl. previous-period comparison) |
+| `timeseries` | filters, `granularity: "day" \| "week"` | `TimeSeriesPoint[]` |
+| `breakdown` | filters, `dimension: platform\|country\|device\|campaign`, `limit?` | `GroupTotals[]` |
+| `campaign` | `campaignId`, filters | `{ totals, series }` |
+| `csv` | query, `offset`, `limit` | `{ text, totalRows, done }` (streamed chunks) |
+| `clearCache` | — | `ack` |
+
+Every response carries `processingMs` and `cacheHit` for the Performance Monitor.
+
+### Equivalent REST shape (for reference)
+
+```
+GET /api/analytics?startDate&endDate&platform&country&device&campaign
+                  &search&sortBy&sortOrder&page&pageSize
+GET /api/analytics/summary
+GET /api/analytics/timeseries?granularity=day|week
+GET /api/analytics/platforms | /countries | /devices | /campaigns
+GET /api/health
+```
+
+Response envelope:
+
+```json
+{
+  "data": [],
+  "pagination": { "page": 1, "pageSize": 100, "total": 50000, "totalPages": 500 }
 }
 ```
 
-Remember to import { toast } from "sonner". Usage: `toast("Event has been created.")`
+All parameters are validated and clamped (`pageSize ≤ 1000`, page ≥ 1, unknown values rejected) — the same validation belongs on a server.
 
-## Dialogs
+---
 
-Always ensure your larger dialogs have a scroll in its content to ensure that its content fits the screen size. Make sure that the content is not cut off from the screen.
+## Screenshots
 
-Ideally, instead of using a new page, use a Dialog instead. 
+> Explore the running app: landing → guest sign-in → Overview (KPIs + charts) → Data Explorer (search/sort/scroll 60k+ rows) → Performance Monitor (live p95s).
 
-# Using the Convex backend
+| Page | What to look at |
+|---|---|
+| Overview | 8 KPI cards with prev-period deltas; daily/weekly revenue toggle |
+| Data Explorer | Row count vs. DOM rows rendered (~28 for any dataset size) |
+| Performance Monitor | p50/p95 query & search latency, honest "unavailable" memory on Safari/Firefox |
 
-You will be implementing the convex backend. Follow your knowledge of convex and the documentation to implement the backend.
+---
 
-## The Convex Schema
+## Local Setup
 
-You must correctly follow the convex schema implementation.
-
-The schema is defined in `src/convex/schema.ts`.
-
-Do not include the `_id` and `_creationTime` fields in your queries (it is included by default for each table).
-Do not index `_creationTime` as it is indexed for you. Never have duplicate indexes.
-
-
-## Convex Actions: Using CRUD operations
-
-When running anything that involves external connections, you must use a convex action with "use node" at the top of the file.
-
-You cannot have queries or mutations in the same file as a "use node" action file. Thus, you must use pre-built queries and mutations in other files.
-
-You can also use the pre-installed internal crud functions for the database:
-
-```ts
-// in convex/users.ts
-import { crud } from "convex-helpers/server/crud";
-import schema from "./schema.ts";
-
-export const { create, read, update, destroy } = crud(schema, "users");
-
-// in some file, in an action:
-const user = await ctx.runQuery(internal.users.read, { id: userId });
-
-await ctx.runMutation(internal.users.update, {
-  id: userId,
-  patch: {
-    status: "inactive",
-  },
-});
+```bash
+bun install        # or npm install / pnpm install
+bun dev            # start dev server (platform-managed in Freebuff)
 ```
 
+Open `http://localhost:5173`, click **Launch dashboard**, and sign in as guest.
 
-## Common Convex Mistakes To Avoid
+## Environment Variables
 
-When using convex, make sure:
-- Document IDs are referenced as `_id` field, not `id`.
-- Document ID types are referenced as `Id<"TableName">`, not `string`.
-- Document object types are referenced as `Doc<"TableName">`.
-- Keep schemaValidation to false in the schema file.
-- You must correctly type your code so that it passes the type checker.
-- You must handle null / undefined cases of your convex queries for both frontend and backend, or else it will throw an error that your data could be null or undefined.
-- Always use the `@/folder` path, with `@/convex/folder/file.ts` syntax for importing convex files.
-- This includes importing generated files like `@/convex/_generated/server`, `@/convex/_generated/api`
-- Remember to import functions like useQuery, useMutation, useAction, etc. from `convex/react`
-- NEVER have return type validators.
+| Variable | Required | Purpose |
+|---|---|---|
+| `VITE_CONVEX_URL` | yes | Convex backend for auth |
+| `VITE_VLY_APP_ID` / `VITE_VLY_MONITORING_URL` | auto | Platform instrumentation |
+
+No analytics/API secrets are needed: the data layer is local and deterministic. Do not hardcode URLs — always read from `import.meta.env`.
+
+## Running Frontend
+
+```bash
+bun dev        # dev server
+bun run build  # production build (tsc + vite build)
+bun preview    # serve the build
+```
+
+## Running Backend
+
+This build ships the data layer as an **in-browser Web Worker** (a deliberate architecture decision — see *Future Improvements*). The engine's API is the same contract a FastAPI backend would expose; to attach a real backend:
+
+1. Implement the REST endpoints above in FastAPI, backed by Postgres/SQLite.
+2. Replace the `requestWithId` call sites in `src/lib/analytics/client.ts` with `fetch` calls.
+3. Keep `src/services/analyticsApi.ts` and every hook unchanged — only the transport changes.
+
+---
+
+## Performance Testing
+
+The Performance Monitor page (`/dashboard/monitor`) records **only measured values** from this browser session. To reproduce:
+
+1. Sign in → Performance Monitor.
+2. Click around (switch presets, sort, search) to populate the ring buffers (200 samples).
+3. Read p50/p95 for query/search/render, plus dataset bytes and cache counters.
+
+### Reproducing at 10k / 50k / 100k / 200k records
+
+1. Go to **Settings → Dataset**, enter the row count, click **Regenerate**.
+2. Note the *Worker init* value on the monitor — dataset generation time.
+3. Run the same interaction script at each size: change date range, sort by revenue, search "ads", page to 5, export CSV.
+4. Compare the metrics below at each size.
+
+### What to measure and how
+
+| Metric | Where to measure | Method |
+|---|---|---|
+| Initial load | DevTools → Performance | Reload with cache disabled; read *LCP* and script compile time |
+| API (engine) latency | Performance Monitor | p50/p95 query latency across 20+ interactions |
+| Search latency | Performance Monitor | Type a query, read p50/p95 search latency |
+| Table scrolling | DevTools → Performance, CPU 6× throttle | Scroll the explorer; check for long frames (>16ms) |
+| Chart interaction | DevTools → Performance | Hover/toggle charts; record frame durations |
+| Memory | Performance Monitor | Heap used/limit (Chrome; labeled *unavailable* elsewhere) |
+| DOM size | DevTools console | `document.querySelectorAll('tr').length` while scrolling — stays ~30 |
+
+No benchmark numbers are claimed in this README: run the procedure above on your hardware and record what you observe. The monitor's status band (Excellent / Good / Needs optimization) is derived from the measured p95s with the thresholds documented in `src/hooks/use-performance.ts`.
+
+---
+
+## Deployment
+
+Frontend (Vercel / Netlify / any static host):
+
+```bash
+bun run build   # outputs dist/
+```
+
+Set `VITE_CONVEX_URL` in the host's environment settings. The app is fully static — no server rendering, no runtime secrets in the client bundle.
+
+---
+
+## Future Improvements
+
+- **Real backend**: swap the worker transport for FastAPI + Postgres with the same API contract (the code is structured for exactly this swap).
+- **Server-side aggregation pushdown** for datasets beyond ~1M rows.
+- **IndexedDB persistence** so the dataset survives reloads without regeneration.
+- **Unit tests** for the engine (aggregation sums, filter correctness, CSV round-trip) via `vitest` — the engine is pure and worker-isolated, which makes it directly testable.
+- **Shared RSSW/SSR data loading** if a server is introduced.
+- **Accessibility audit** to WCAG AAA contrast on chart series.
+
+## Author
+
+Built as a Frontend R&D assignment demonstrating performance-critical React engineering.

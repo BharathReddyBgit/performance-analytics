@@ -84,6 +84,8 @@ export class AnalyticsStore {
   private dayFirst: Uint32Array;
   private dayLast: Uint32Array;
   private filterCache = new Map<string, Uint32Array>();
+  /** True when the last compileFilter call was served from the cache. */
+  lastFilterCacheHit = false;
 
   constructor(rowCount: number, startDay: number, endDay: number, seed = 20260909) {
     const t0 = performance.now();
@@ -117,7 +119,8 @@ export class AnalyticsStore {
     this.generationMs = performance.now() - t0;
   }
 
-  private filterKey(f: FilterState): string {
+  /** Stable cache key for a FilterState (categorical order-insensitive). */
+  filterKey(f: FilterState): string {
     return [
       f.startDay,
       f.endDay,
@@ -137,7 +140,11 @@ export class AnalyticsStore {
   compileFilter(filters: FilterState): Uint32Array {
     const key = this.filterKey(filters);
     const cached = this.filterCache.get(key);
-    if (cached) return cached;
+    if (cached) {
+      this.lastFilterCacheHit = true;
+      return cached;
+    }
+    this.lastFilterCacheHit = false;
 
     const { startDay, endDay } = filters;
     const dStart = Math.max(0, startDay - this.dayMin);

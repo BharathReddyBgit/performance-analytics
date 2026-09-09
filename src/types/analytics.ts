@@ -229,7 +229,7 @@ export type WorkerRequest =
   | { type: "breakdown"; id: number; filters: FilterState; dimension: BreakdownDimension; limit?: number }
   | { type: "campaign"; id: number; campaignId: string; filters: FilterState }
   | { type: "csv"; id: number; query: AnalyticsQuery; offset: number; limit: number }
-  | { type: "clearCache" };
+  | { type: "clearCache"; id: number };
 
 export type BreakdownDimension = "platform" | "country" | "device" | "campaign";
 

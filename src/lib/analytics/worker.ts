@@ -24,7 +24,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
           type: "query", id: req.id,
           rows: r.rows, pagination: r.pagination,
           filteredRows: r.pagination.total,
-          processingMs: performance.now() - t0, cacheHit: false,
+          processingMs: performance.now() - t0, cacheHit: engine!.store.lastFilterCacheHit,
         });
         break;
       }
@@ -35,7 +35,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
           type: "summary", id: req.id,
           kpi: kpi.current, deltaPct: kpi.deltaPct,
           filteredRows: kpi.current.rowCount,
-          processingMs: performance.now() - t0, cacheHit: false,
+          processingMs: performance.now() - t0, cacheHit: engine!.store.lastFilterCacheHit,
         });
         break;
       }
@@ -78,7 +78,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
         break;
       }
       default: {
-        post({ type: "error", id: (req as { id?: number }).id ?? -1, message: "Unknown request type" });
+        break;
       }
     }
   } catch (err) {

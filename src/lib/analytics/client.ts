@@ -25,6 +25,9 @@ type Pending = {
   reject: (reason: Error) => void;
 };
 
+/** Distributive Omit: strips `id` from every union member. */
+type WithoutId<T> = T extends { id: number } ? Omit<T, "id"> : T;
+
 class AnalyticsClient {
   private worker: Worker | null = null;
   private pending = new Map<number, Pending>();
@@ -46,9 +49,11 @@ class AnalyticsClient {
     const worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const msg = event.data;
-      const pending = this.pending.get(msg.id);
+      const id = "id" in msg ? msg.id : undefined;
+      if (id == null) return;
+      const pending = this.pending.get(id);
       if (!pending) return;
-      this.pending.delete(msg.id);
+      this.pending.delete(id);
       pending.resolve(msg);
     };
     worker.onerror = (event) => {
@@ -86,7 +91,7 @@ class AnalyticsClient {
   }
 
   /** Send a request and await its correlated response. */
-  private request(req: Omit<WorkerRequest, "id"> & { id?: number }): Promise<WorkerResponse> {
+  private request(req: WorkerRequest): Promise<WorkerResponse> {
     const worker = this.spawn();
     const id = this.nextId++;
     const payload = { ...req, id } as WorkerRequest;
@@ -94,6 +99,10 @@ class AnalyticsClient {
       this.pending.set(id, { resolve, reject });
       worker.postMessage(payload);
     });
+  }
+
+  private requestWithId(req: WithoutId<Extract<WorkerRequest, { type: "query" | "summary" | "timeseries" | "breakdown" | "campaign" | "csv" | "clearCache" }>>): Promise<WorkerResponse> {
+    return this.request({ ...req, id: this.nextId++ } as WorkerRequest);
   }
 
   /** Assert a response variant and throw a helpful error otherwise. */
@@ -105,7 +114,7 @@ class AnalyticsClient {
 
   async query(query: AnalyticsQuery): Promise<{ rows: TableRow[]; pagination: Pagination; processingMs: number; isSearch: boolean }> {
     const isSearch = query.search.trim().length > 0;
-    const res = await this.request({ type: "query", query });
+    const res = await this.requestWithId({ type: "query", query });
     const r = this.expect<Extract<WorkerResponse, { type: "query" }>>(res, "query");
     if (isSearch) {
       this.searchLatency.push(r.processingMs);
@@ -114,45 +123,48 @@ class AnalyticsClient {
       this.queryLatency.push(r.processingMs);
       this.lastQueryMs = r.processingMs;
     }
-    this.cacheMisses++;
+    if (r.cacheHit) this.cacheHits++;
+    else this.cacheMisses++;
     return { rows: r.rows, pagination: r.pagination, processingMs: r.processingMs, isSearch };
   }
 
   async summary(filters: FilterState): Promise<{ kpi: Kpi; deltaPct: Record<string, number>; processingMs: number }> {
-    const res = await this.request({ type: "summary", filters });
+    const res = await this.requestWithId({ type: "summary", filters });
     const r = this.expect<Extract<WorkerResponse, { type: "summary" }>>(res, "summary");
     this.queryLatency.push(r.processingMs);
     this.lastQueryMs = r.processingMs;
+    if (r.cacheHit) this.cacheHits++;
+    else this.cacheMisses++;
     return { kpi: r.kpi, deltaPct: r.deltaPct, processingMs: r.processingMs };
   }
 
   async timeseries(filters: FilterState, granularity: "day" | "week"): Promise<{ points: TimeSeriesPoint[]; processingMs: number }> {
-    const res = await this.request({ type: "timeseries", filters, granularity });
+    const res = await this.requestWithId({ type: "timeseries", filters, granularity });
     const r = this.expect<Extract<WorkerResponse, { type: "timeseries" }>>(res, "timeseries");
     return { points: r.points, processingMs: r.processingMs };
   }
 
   async breakdown(filters: FilterState, dimension: BreakdownDimension, limit?: number): Promise<{ groups: GroupTotals[]; processingMs: number }> {
-    const res = await this.request({ type: "breakdown", filters, dimension, limit });
+    const res = await this.requestWithId({ type: "breakdown", filters, dimension, limit });
     const r = this.expect<Extract<WorkerResponse, { type: "breakdown" }>>(res, "breakdown");
     return { groups: r.groups, processingMs: r.processingMs };
   }
 
   async campaignReport(campaignId: string, filters: FilterState): Promise<{ totals: Kpi; series: TimeSeriesPoint[]; processingMs: number }> {
-    const res = await this.request({ type: "campaign", campaignId, filters });
+    const res = await this.requestWithId({ type: "campaign", campaignId, filters });
     const r = this.expect<Extract<WorkerResponse, { type: "campaign" }>>(res, "campaign");
     return { totals: r.totals, series: r.series, processingMs: r.processingMs };
   }
 
   /** Stream one CSV chunk; callers loop until `done`. */
   async csvChunk(query: AnalyticsQuery, offset: number, limit: number): Promise<{ text: string; done: boolean; totalRows: number; processingMs: number }> {
-    const res = await this.request({ type: "csv", query, offset, limit });
+    const res = await this.requestWithId({ type: "csv", query, offset, limit });
     const r = this.expect<Extract<WorkerResponse, { type: "csv" }>>(res, "csv");
     return { text: r.text, done: r.done, totalRows: r.totalRows, processingMs: r.processingMs };
   }
 
   async clearCache(): Promise<void> {
-    await this.request({ type: "clearCache" });
+    await this.requestWithId({ type: "clearCache" });
   }
 
   terminate(): void {
