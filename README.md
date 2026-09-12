@@ -206,106 +206,561 @@ All parameters are validated and clamped (`pageSize ≤ 1000`, page ≥ 1, unkno
 
 ---
 
-## Screenshots
 
-> Explore the running app: landing → guest sign-in → Overview (KPIs + charts) → Data Explorer (search/sort/scroll 60k+ rows) → Performance Monitor (live p95s).
+## 📸 Screenshots
 
-| Page | What to look at |
+### Landing & Authentication
+
+| Landing Page | Authentication |
 |---|---|
-| Overview | 8 KPI cards with prev-period deltas; daily/weekly revenue toggle |
-| Data Explorer | Row count vs. DOM rows rendered (~28 for any dataset size) |
-| Performance Monitor | p50/p95 query & search latency, honest "unavailable" memory on Safari/Firefox |
+| ![Landing](./screenshots/landing.png) | ![Authentication](./screenshots/auth.png) |
+
+### Analytics Dashboard
+
+![Overview](./screenshots/overview.png)
+
+### Campaign Analytics
+
+![Campaigns](./screenshots/campaigns.png)
+
+### Data Explorer
+
+![Data Explorer](./screenshots/data-explorer.png)
+
+### Performance Monitor
+
+![Performance Monitor](./screenshots/performance-monitor.png)
+
+## Local Setup & Running
+
+This project uses a React/Vite frontend with Convex as the backend and authentication layer. When cloning the repository onto a new PC, follow the steps below.
+
+### 1. Prerequisites
+
+Install the following before starting:
+
+* Node.js 18+ (Node.js 20+ recommended)
+* npm
+* Git
+* A GitHub account with access to the repository
+* Convex account
+
+Verify the installation:
+
+```bash
+node --version
+npm --version
+git --version
+```
 
 ---
 
-## Local Setup
+### 2. Clone the Repository
+
+Open Command Prompt or PowerShell and run:
 
 ```bash
-bun install        # or npm install / pnpm install
-bun dev            # start dev server (platform-managed in Freebuff)
+git clone https://github.com/BharathReddyBgit/performance-analytics.git
 ```
 
-Open `http://localhost:5173`, click **Launch dashboard**, and sign in as guest.
-
-## Environment Variables
-
-| Variable | Required | Purpose |
-|---|---|---|
-| `VITE_CONVEX_URL` | yes | Convex backend for auth |
-| `VITE_VLY_APP_ID` / `VITE_VLY_MONITORING_URL` | auto | Platform instrumentation |
-
-No analytics/API secrets are needed: the data layer is local and deterministic. Do not hardcode URLs — always read from `import.meta.env`.
-
-## Running Frontend
+Move into the project:
 
 ```bash
-bun dev        # dev server
-bun run build  # production build (tsc + vite build)
-bun preview    # serve the build
+cd performance-analytics
 ```
-
-## Running Backend
-
-This build ships the data layer as an **in-browser Web Worker** (a deliberate architecture decision — see *Future Improvements*). The engine's API is the same contract a FastAPI backend would expose; to attach a real backend:
-
-1. Implement the REST endpoints above in FastAPI, backed by Postgres/SQLite.
-2. Replace the `requestWithId` call sites in `src/lib/analytics/client.ts` with `fetch` calls.
-3. Keep `src/services/analyticsApi.ts` and every hook unchanged — only the transport changes.
 
 ---
 
-## Performance Testing
+### 3. Install Frontend Dependencies
 
-The Performance Monitor page (`/dashboard/monitor`) records **only measured values** from this browser session. To reproduce:
-
-1. Sign in → Performance Monitor.
-2. Click around (switch presets, sort, search) to populate the ring buffers (200 samples).
-3. Read p50/p95 for query/search/render, plus dataset bytes and cache counters.
-
-### Reproducing at 10k / 50k / 100k / 200k records
-
-1. Go to **Settings → Dataset**, enter the row count, click **Regenerate**.
-2. Note the *Worker init* value on the monitor — dataset generation time.
-3. Run the same interaction script at each size: change date range, sort by revenue, search "ads", page to 5, export CSV.
-4. Compare the metrics below at each size.
-
-### What to measure and how
-
-| Metric | Where to measure | Method |
-|---|---|---|
-| Initial load | DevTools → Performance | Reload with cache disabled; read *LCP* and script compile time |
-| API (engine) latency | Performance Monitor | p50/p95 query latency across 20+ interactions |
-| Search latency | Performance Monitor | Type a query, read p50/p95 search latency |
-| Table scrolling | DevTools → Performance, CPU 6× throttle | Scroll the explorer; check for long frames (>16ms) |
-| Chart interaction | DevTools → Performance | Hover/toggle charts; record frame durations |
-| Memory | Performance Monitor | Heap used/limit (Chrome; labeled *unavailable* elsewhere) |
-| DOM size | DevTools console | `document.querySelectorAll('tr').length` while scrolling — stays ~30 |
-
-No benchmark numbers are claimed in this README: run the procedure above on your hardware and record what you observe. The monitor's status band (Excellent / Good / Needs optimization) is derived from the measured p95s with the thresholds documented in `src/hooks/use-performance.ts`.
-
-### Engine invariant smoke test
-
-A headless check of the query engine's core invariants runs without a browser:
+Install all required packages:
 
 ```bash
-bun run smoke   # generates 60k rows and validates the engine invariants
+npm install
 ```
 
-It verifies: date-window filtering (row window ⊆ [startDay, endDay]), metric consistency (`ctr = clicks/impressions`, `roas = revenue/spend`), descending sort order, pagination stability across pages, search by name and campaign ID (including zero-result handling), timeseries/breakdown totals reconciling with KPI sums, CSV chunk coverage, and filter-cache hits on repeated queries.
+This installs React, Vite, TypeScript, Convex, Framer Motion, Recharts, TanStack libraries, and other project dependencies.
 
 ---
 
-## Deployment
+### 4. Configure Convex
 
-Frontend (Vercel / Netlify / any static host):
+The application uses Convex for backend functions, database operations, and authentication.
+
+Start the Convex development environment:
 
 ```bash
-bun run build   # outputs dist/
+npx convex dev
 ```
 
-Set `VITE_CONVEX_URL` in the host's environment settings. The app is fully static — no server rendering, no runtime secrets in the client bundle.
+If this is the first time running the project on the PC, Convex may ask you to log in:
+
+```bash
+npx convex login
+```
+
+Follow the browser authentication process.
+
+Then run:
+
+```bash
+npx convex dev
+```
+
+Keep this terminal running.
+
+You should see something similar to:
+
+```text
+Convex functions ready!
+
+Development
+https://xxxxx.convex.cloud
+```
 
 ---
+
+### 5. Generate Convex Files
+
+If the generated Convex files are missing after cloning or pulling the repository, run:
+
+```bash
+npx convex codegen
+```
+
+This generates the files required by the frontend, including:
+
+```text
+src/convex/_generated/
+├── api.d.ts
+├── api.js
+├── dataModel.d.ts
+├── server.d.ts
+└── server.js
+```
+
+If you see errors such as:
+
+```text
+Cannot find module './_generated/server'
+```
+
+or:
+
+```text
+Cannot find module '@/convex/_generated/api'
+```
+
+run:
+
+```bash
+npx convex codegen
+```
+
+and then rebuild the project.
+
+---
+
+### 6. Configure Convex Authentication
+
+The project uses Convex Auth.
+
+If authentication configuration is missing on a new Convex deployment, run:
+
+```bash
+npx @convex-dev/auth
+```
+
+Follow the setup prompts.
+
+Convex Auth requires:
+
+```text
+SITE_URL
+JWT_PRIVATE_KEY
+JWKS
+```
+
+The authentication configuration must be available in the appropriate Convex deployment environment.
+
+For local development, the site URL is normally:
+
+```text
+http://localhost:5173
+```
+
+---
+
+### 7. Set Convex Environment Variables
+
+If the project requires the authentication issuer, configure it using:
+
+```bash
+npx convex env set VLY_CONVEX_AUTH_ISSUER https://freebuff.com
+```
+
+For production:
+
+```bash
+npx convex env set VLY_CONVEX_AUTH_ISSUER https://freebuff.com --prod
+```
+
+To check the configured variables:
+
+```bash
+npx convex env list
+```
+
+For production:
+
+```bash
+npx convex env list --prod
+```
+
+> Do not commit private keys such as `JWT_PRIVATE_KEY` to GitHub.
+
+---
+
+### 8. Configure the Frontend Convex URL
+
+The frontend needs the Convex deployment URL.
+
+For local development, use the development deployment URL provided by:
+
+```bash
+npx convex dev
+```
+
+For a production deployment, use the production Convex URL.
+
+Example:
+
+```env
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
+```
+
+Do not expose private Convex authentication keys in frontend environment variables.
+
+---
+
+### 9. Run the Application
+
+Open a **second terminal** while `npx convex dev` continues running.
+
+From the project directory:
+
+```bash
+npm run dev
+```
+
+Vite will normally start the application at:
+
+```text
+http://localhost:5173
+```
+
+Open the URL in your browser.
+
+### Terminal setup
+
+You should have two terminals running during development:
+
+**Terminal 1 — Convex backend**
+
+```bash
+cd performance-analytics
+npx convex dev
+```
+
+**Terminal 2 — React/Vite frontend**
+
+```bash
+cd performance-analytics
+npm run dev
+```
+
+The frontend communicates with the Convex backend while both processes are running.
+
+---
+
+### 10. Test the Application
+
+After the application starts:
+
+1. Open the Vite URL.
+2. Open the landing page.
+3. Click **Sign In**.
+4. Test email OTP authentication.
+5. Test guest authentication.
+6. Open the dashboard.
+7. Test the analytics charts.
+8. Open Data Explorer.
+9. Test search, sorting and filtering.
+10. Check the Performance Monitor.
+11. Verify that the Convex backend shows no errors.
+
+---
+
+### 11. Production Build Test
+
+Before deploying, always test the production build locally:
+
+```bash
+npm run build
+```
+
+A successful build should finish with:
+
+```text
+✓ built
+```
+
+Then preview the production build:
+
+```bash
+npm run preview
+```
+
+Open the URL shown by Vite.
+
+---
+
+### 12. If Convex Generated Files Are Missing
+
+After pulling the project from GitHub, you may encounter:
+
+```text
+Cannot find module './_generated/server'
+```
+
+or:
+
+```text
+Cannot find module '@/convex/_generated/api'
+```
+
+Fix:
+
+```bash
+npx convex codegen
+```
+
+Then:
+
+```bash
+npm run build
+```
+
+If the build succeeds, start the application again:
+
+```bash
+npm run dev
+```
+
+---
+
+### 13. If `npm run build` Fails
+
+First install dependencies again:
+
+```bash
+npm install
+```
+
+Then regenerate Convex bindings:
+
+```bash
+npx convex codegen
+```
+
+Then run:
+
+```bash
+npm run build
+```
+
+If the problem is related to stale dependencies, you can perform a clean installation on Windows:
+
+```cmd
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+npx convex codegen
+npm run build
+```
+
+> Only remove `package-lock.json` if necessary. Prefer `npm ci` when a valid lockfile is already committed.
+
+---
+
+### 14. Common Issue: Convex and Frontend Must Both Run
+
+A common mistake when setting up the project on a new PC is running only:
+
+```bash
+npm run dev
+```
+
+The frontend may start, but authentication or backend functionality can fail because Convex is not running locally.
+
+For development, run both:
+
+```bash
+npx convex dev
+```
+
+and:
+
+```bash
+npm run dev
+```
+
+Think of the architecture as:
+
+```text
+Browser
+   ↓
+React + Vite
+   ↓
+Convex Client
+   ↓
+Convex Backend
+   ↓
+Database / Authentication
+```
+
+---
+
+### 15. Git Pull Workflow
+
+When the project is already installed and you want to get the latest changes:
+
+```bash
+git pull --rebase origin main
+```
+
+Then regenerate Convex bindings if required:
+
+```bash
+npx convex codegen
+```
+
+Install any new dependencies:
+
+```bash
+npm install
+```
+
+Finally:
+
+```bash
+npm run build
+```
+
+Then start development:
+
+```bash
+npx convex dev
+```
+
+In another terminal:
+
+```bash
+npm run dev
+```
+
+---
+
+### 16. Recommended First-Time Setup — Quick Version
+
+For a completely new PC:
+
+```bash
+git clone https://github.com/BharathReddyBgit/performance-analytics.git
+
+cd performance-analytics
+
+npm install
+
+npx convex login
+
+npx convex dev
+```
+
+Then open a second terminal:
+
+```bash
+cd performance-analytics
+
+npx convex codegen
+
+npm run build
+
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+---
+
+### 17. Important Notes
+
+* Do not commit `.env` files containing secrets.
+* Do not commit `JWT_PRIVATE_KEY`.
+* Convex generated files may need to be regenerated using `npx convex codegen`.
+* Keep the Convex development process running while testing backend-dependent features.
+* Run `npm run build` before submitting or deploying the project.
+* Production uses a separate Convex deployment from local development.
+* The Vercel deployment requires the production Convex URL to be configured correctly.
+* If using Vercel SPA routing, keep the project's `vercel.json` configuration in the repository.
+
+### Development Commands — Summary
+
+| Purpose                  | Command                         |
+| ------------------------ | ------------------------------- |
+| Install dependencies     | `npm install`                   |
+| Login to Convex          | `npx convex login`              |
+| Start Convex             | `npx convex dev`                |
+| Generate Convex bindings | `npx convex codegen`            |
+| Start frontend           | `npm run dev`                   |
+| Production build         | `npm run build`                 |
+| Preview production build | `npm run preview`               |
+| Pull latest code         | `git pull --rebase origin main` |
+| Check Convex variables   | `npx convex env list`           |
+| Deploy Convex production | `npx convex deploy`             |
+
+### Typical Development Workflow
+
+```text
+Clone / Pull
+     ↓
+npm install
+     ↓
+npx convex codegen
+     ↓
+npx convex dev       ← Terminal 1
+     ↓
+npm run dev          ← Terminal 2
+     ↓
+Open localhost:5173
+     ↓
+Test Authentication
+     ↓
+Test Dashboard
+     ↓
+Test Data Explorer
+     ↓
+Test Performance Monitor
+     ↓
+npm run build
+     ↓
+Deploy
+```
+
 
 ## Future Improvements
 
