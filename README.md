@@ -213,23 +213,23 @@ All parameters are validated and clamped (`pageSize ≤ 1000`, page ≥ 1, unkno
 
 | Landing Page | Authentication |
 |---|---|
-| ![Landing](./screenshots/landing.png) | ![Authentication](./screenshots/auth.png) |
+| ![Landing](./src/public/screenshots/landing.png) | ![Authentication](./src/public/screenshots/auth.png) |
 
 ### Analytics Dashboard
 
-![Overview](./screenshots/overview.png)
+![Overview](./src/public/screenshots/overview.png)
 
 ### Campaign Analytics
 
-![Campaigns](./screenshots/campaigns.png)
+![Campaigns](./src/public/screenshots/campaigns.png)
 
 ### Data Explorer
 
-![Data Explorer](./screenshots/data-explorer.png)
+![Data Explorer](./src/public/screenshots/data-explorer.png)
 
 ### Performance Monitor
 
-![Performance Monitor](./screenshots/performance-monitor.png)
+![Performance Monitor](./src/public/screenshots/performance-monitor.png)
 
 ## Local Setup & Running
 
