@@ -221,7 +221,7 @@ All parameters are validated and clamped (`pageSize ≤ 1000`, page ≥ 1, unkno
 
 ### Campaign Analytics
 
-![Campaigns](./src/public/screenshots/campaigns.png)
+![Campaigns](./src/public/screenshots/c.png)
 
 ### Data Explorer
 
